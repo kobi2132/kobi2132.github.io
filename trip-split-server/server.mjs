@@ -80,10 +80,10 @@ function send(res, code, obj, origin) {
 }
 
 async function serveStatic(pathname, req, res) {
-  let rel = decodeURIComponent(pathname).replace(/^\/+/, "") || "index.html";
-  const full = path.resolve(PUBLIC_DIR, rel);
-  if (!full.startsWith(path.resolve(PUBLIC_DIR) + path.sep)) { res.writeHead(404); return res.end(); }
   try {
+    const rel = decodeURIComponent(pathname).replace(/^\/+/, "") || "index.html";
+    const full = path.resolve(PUBLIC_DIR, rel);
+    if (!full.startsWith(path.resolve(PUBLIC_DIR) + path.sep)) throw Object.assign(new Error(), { code: "ENOENT" });
     const st = await fs.stat(full);
     if (!st.isFile()) throw Object.assign(new Error(), { code: "ENOENT" });
     const ext = path.extname(full);
@@ -95,7 +95,12 @@ async function serveStatic(pathname, req, res) {
   } catch { res.writeHead(404, { "content-type": "text/plain; charset=utf-8" }); res.end("not found"); }
 }
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
+  handle(req, res).catch(e => { console.error(e); try { if (!res.headersSent) res.writeHead(500); res.end(); } catch {} });
+});
+process.on("unhandledRejection", e => console.error("unhandled", e));
+
+async function handle(req, res) {
   const origin = ALLOWED_ORIGINS.includes(req.headers.origin) ? req.headers.origin : null;
   const url = new URL(req.url, "http://x");
   if (url.pathname === "/health") return send(res, 200, { ok: true });
@@ -128,7 +133,7 @@ const server = http.createServer(async (req, res) => {
     console.error(e);
     send(res, 500, { error: "server" }, origin);
   }
-});
+}
 
 if (process.argv[1] && process.argv[1].endsWith("server.mjs")) {
   await fs.mkdir(DATA_DIR, { recursive: true });
