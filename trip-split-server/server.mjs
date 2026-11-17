@@ -4,6 +4,9 @@
 //
 // POST /api/trips/:id/sync  body: {settings, expenses, deleted}
 //   Merges the phone's copy into the server copy and returns the merged trip.
+// GET  /api/rates                  today's exchange rates (per 1 USD), cached 6 hours
+// PUT  /api/trips/:id/receipts/:rid  a receipt photo (JPEG, up to 3MB)
+// GET  /api/trips/:id/receipts/:rid
 // GET  /health
 // GET  anything else: the app itself, from PUBLIC_DIR
 import http from "node:http";
@@ -16,6 +19,9 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "https://kobi2132.github
 const MAX_BODY = 1024 * 1024; // 1MB per sync is thousands of expenses
 const PUBLIC_DIR = process.env.PUBLIC_DIR || "/app/public";
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
+const MAX_RECEIPT = 3 * 1024 * 1024;
+const RID_RE = /^[A-Za-z0-9_-]{8,40}$/;
+const RATES_URL = process.env.RATES_URL || "https://open.er-api.com/v6/latest/USD";
 const ID_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
 /* ---- merge (same rules as the app) ---- */
@@ -62,6 +68,30 @@ async function save(id, data) {
   await fs.rename(tmp, file(id));
 }
 
+/* ---- exchange rates, fetched at most every 6 hours ---- */
+let ratesCache = null, ratesAt = 0, ratesPending = null;
+async function getRates() {
+  if (ratesCache && Date.now() - ratesAt < 6 * 3600_000) return ratesCache;
+  if (!ratesPending) ratesPending = (async () => {
+    try {
+      const r = await fetch(RATES_URL, { signal: AbortSignal.timeout(8000) });
+      const j = await r.json();
+      if (!r.ok || !j.rates || typeof j.rates.ILS !== "number") throw new Error("bad rates");
+      ratesCache = { base: "USD", rates: j.rates, updatedAt: (j.time_last_update_unix || Date.now() / 1000) * 1000 };
+      ratesAt = Date.now();
+    } catch (e) { console.error("rates", e.message); if (!ratesCache) throw e; }
+    finally { ratesPending = null; }
+    return ratesCache;
+  })();
+  return ratesPending;
+}
+
+async function readBody(req, max) {
+  let size = 0; const chunks = [];
+  for await (const c of req) { size += c.length; if (size > max) { const e = new Error("too_big"); e.code = 413; throw e; } chunks.push(c); }
+  return Buffer.concat(chunks);
+}
+
 /* ---- tiny per-IP rate limit ---- */
 const hits = new Map();
 function limited(ip) {
@@ -105,21 +135,50 @@ async function handle(req, res) {
   const url = new URL(req.url, "http://x");
   if (url.pathname === "/health") return send(res, 200, { ok: true });
   if (req.method === "OPTIONS") {
-    res.writeHead(204, origin ? { "access-control-allow-origin": origin, "access-control-allow-methods": "POST", "access-control-allow-headers": "content-type", "access-control-max-age": "86400", vary: "Origin" } : {});
+    res.writeHead(204, origin ? { "access-control-allow-origin": origin, "access-control-allow-methods": "GET, POST, PUT", "access-control-allow-headers": "content-type", "access-control-max-age": "86400", vary: "Origin" } : {});
     return res.end();
   }
   if ((req.method === "GET" || req.method === "HEAD") && !url.pathname.startsWith("/api/")) return serveStatic(url.pathname, req, res);
+  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
+  if (limited(ip)) return send(res, 429, { error: "slow_down" }, origin);
+
+  if (url.pathname === "/api/rates" && req.method === "GET") {
+    try { return send(res, 200, await getRates(), origin); } catch { return send(res, 503, { error: "rates_unavailable" }, origin); }
+  }
+
+  const rm = url.pathname.match(/^\/api\/trips\/([^/]+)\/receipts\/([^/]+)$/);
+  if (rm) {
+    const [, tid, rid] = rm;
+    if (!ID_RE.test(tid) || !RID_RE.test(rid)) return send(res, 400, { error: "bad_id" }, origin);
+    const dir = path.join(DATA_DIR, "receipts", tid), f = path.join(dir, rid + ".jpg");
+    if (req.method === "GET") {
+      try {
+        const buf = await fs.readFile(f);
+        res.writeHead(200, { "content-type": "image/jpeg", "cache-control": "private, max-age=31536000, immutable", "x-content-type-options": "nosniff", ...(origin ? { "access-control-allow-origin": origin, vary: "Origin" } : {}) });
+        return res.end(buf);
+      } catch { return send(res, 404, { error: "not_found" }, origin); }
+    }
+    if (req.method === "PUT") {
+      try {
+        const buf = await readBody(req, MAX_RECEIPT);
+        if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return send(res, 400, { error: "jpeg_only" }, origin);
+        await fs.mkdir(dir, { recursive: true });
+        await fs.writeFile(f + ".tmp", buf); await fs.rename(f + ".tmp", f);
+        return send(res, 200, { ok: true }, origin);
+      } catch (e) { if (e.code === 413) return send(res, 413, { error: "too_big" }, origin); throw e; }
+    }
+    return send(res, 405, { error: "method" }, origin);
+  }
+
   const m = url.pathname.match(/^\/api\/trips\/([^/]+)\/sync$/);
   if (!m || req.method !== "POST") return send(res, 404, { error: "not_found" }, origin);
   const id = m[1];
   if (!ID_RE.test(id)) return send(res, 400, { error: "bad_id" }, origin);
-  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
-  if (limited(ip)) return send(res, 429, { error: "slow_down" }, origin);
 
-  let size = 0; const chunks = [];
   try {
-    for await (const c of req) { size += c.length; if (size > MAX_BODY) return send(res, 413, { error: "too_big" }, origin); chunks.push(c); }
-    const body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+    let raw;
+    try { raw = await readBody(req, MAX_BODY); } catch (e) { if (e.code === 413) return send(res, 413, { error: "too_big" }, origin); throw e; }
+    const body = JSON.parse(raw.toString("utf8") || "{}");
     if (!valid(body)) return send(res, 400, { error: "bad_body" }, origin);
     const merged = await withLock(id, async () => {
       const cur = await load(id);
