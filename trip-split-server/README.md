@@ -15,3 +15,10 @@
 
 ## גיבוי
 כל המידע נמצא ב־`/srv/apps/trip-split/data`.
+
+## מה עוד השרת עושה
+- `GET /api/rates`: שערי מטבע יומיים מ־open.er-api.com (חינם, בלי מפתח), נשמרים בזיכרון 6 שעות.
+- `PUT/GET /api/trips/<id>/receipts/<rid>`: צילומי קבלות (JPEG עד 3MB), נשמרים ב־`data/receipts/<id>/`.
+
+## גיבוי
+`/srv/apps/trip-split/backup.sh` רץ כל לילה ב־03:40 ושומר 30 לילות ב־`/srv/backups/trip-split` (כולל הקבלות).
