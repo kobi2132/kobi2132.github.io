@@ -5,6 +5,7 @@
 // POST /api/trips/:id/sync  body: {settings, expenses, deleted}
 //   Merges the phone's copy into the server copy and returns the merged trip.
 // GET  /health
+// GET  anything else: the app itself, from PUBLIC_DIR
 import http from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -13,6 +14,8 @@ const PORT = Number(process.env.PORT || 3000);
 const DATA_DIR = process.env.DATA_DIR || "/data";
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "https://kobi2132.github.io").split(",").map(s => s.trim());
 const MAX_BODY = 1024 * 1024; // 1MB per sync is thousands of expenses
+const PUBLIC_DIR = process.env.PUBLIC_DIR || "/app/public";
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
 const ID_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
 /* ---- merge (same rules as the app) ---- */
@@ -76,6 +79,22 @@ function send(res, code, obj, origin) {
   res.end(obj === undefined ? "" : JSON.stringify(obj));
 }
 
+async function serveStatic(pathname, req, res) {
+  let rel = decodeURIComponent(pathname).replace(/^\/+/, "") || "index.html";
+  const full = path.resolve(PUBLIC_DIR, rel);
+  if (!full.startsWith(path.resolve(PUBLIC_DIR) + path.sep)) { res.writeHead(404); return res.end(); }
+  try {
+    const st = await fs.stat(full);
+    if (!st.isFile()) throw Object.assign(new Error(), { code: "ENOENT" });
+    const ext = path.extname(full);
+    const h = { "content-type": TYPES[ext] || "application/octet-stream", "x-content-type-options": "nosniff", "referrer-policy": "no-referrer",
+      "cache-control": ext === ".html" || rel === "sw.js" || ext === ".webmanifest" ? "no-cache" : "public, max-age=86400" };
+    res.writeHead(200, h);
+    if (req.method === "HEAD") return res.end();
+    res.end(await fs.readFile(full));
+  } catch { res.writeHead(404, { "content-type": "text/plain; charset=utf-8" }); res.end("not found"); }
+}
+
 const server = http.createServer(async (req, res) => {
   const origin = ALLOWED_ORIGINS.includes(req.headers.origin) ? req.headers.origin : null;
   const url = new URL(req.url, "http://x");
@@ -84,6 +103,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, origin ? { "access-control-allow-origin": origin, "access-control-allow-methods": "POST", "access-control-allow-headers": "content-type", "access-control-max-age": "86400", vary: "Origin" } : {});
     return res.end();
   }
+  if ((req.method === "GET" || req.method === "HEAD") && !url.pathname.startsWith("/api/")) return serveStatic(url.pathname, req, res);
   const m = url.pathname.match(/^\/api\/trips\/([^/]+)\/sync$/);
   if (!m || req.method !== "POST") return send(res, 404, { error: "not_found" }, origin);
   const id = m[1];

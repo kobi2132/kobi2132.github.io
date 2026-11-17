@@ -170,7 +170,8 @@ const DEFAULT_RATES={ILS:1,USD:3.7,EUR:4.0,GBP:4.7,THB:0.11,JPY:0.025,CHF:4.2,CZ
 const CATS=[["food","🍽️","אוכל"],["stay","🏨","לינה"],["ride","🚕","תחבורה"],["fun","🎟️","אטרקציות"],["shop","🛍️","קניות"],["fuel","⛽","דלק"],["drink","🍻","בילוי"],["other","📦","אחר"]];
 const CAT=Object.fromEntries(CATS.map(c=>[c[0],c]));
 const LS_KEY="trip-split-v1";
-const SYNC_URL="https://trip.jacob-apps.co.il/api/trips/";
+const HOME_HOST="mysplit.jacob-apps.co.il";
+const SYNC_URL=location.hostname===HOME_HOST?"/api/trips/":"https://"+HOME_HOST+"/api/trips/";
 const APP_URL=location.origin+location.pathname;
 
 let state={settings:null,expenses:[],deleted:{}};
@@ -216,6 +217,7 @@ async function syncNow(){
     const before=JSON.stringify([state.settings,state.expenses]);
     const m=merge(state,remote);state.settings=m.settings||state.settings;state.expenses=m.expenses;state.deleted=m.deleted;
     saveLocal();lastSync=Date.now();setSync("ok");
+    if(location.hostname.endsWith("github.io")&&state.settings){location.replace("https://"+HOME_HOST+"/#join-"+tripId);return}
     if(JSON.stringify([state.settings,state.expenses])!==before&&!isTyping())render();
   }catch(e){setSync("off")}
   finally{syncing=false;if(again){again=false;syncSoon()}}

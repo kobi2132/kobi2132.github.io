@@ -1,5 +1,5 @@
 # Lives on the server at /srv/apps/trip-split/compose.yaml (next to server.mjs).
-# A tiny sync server for חצי־חצי. Small limits so it never competes with tarpi.
+# חצי־חצי: serves the app and syncs trips between phones. Small limits so it never competes with tarpi.
 name: trip-split
 
 services:
@@ -15,6 +15,7 @@ services:
       ALLOWED_ORIGINS: https://kobi2132.github.io
     volumes:
       - ./server.mjs:/app/server.mjs:ro
+      - ./public:/app/public:ro
       - ./data:/data
     read_only: true
     mem_limit: 96m
