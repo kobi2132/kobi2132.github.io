@@ -1,0 +1,5 @@
+# Add this block to /srv/proxy/Caddyfile (do not touch the other blocks).
+mysplit.jacob-apps.co.il {
+    encode zstd gzip
+    reverse_proxy trip-split-app:3000
+}

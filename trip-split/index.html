@@ -55,6 +55,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .brand .trip{color:var(--muted);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sync{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
 .sync.on{color:var(--accent)}
+.sync.off{color:var(--bad)}
+.linkbox{direction:ltr;font-size:13px}
 
 .hero{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset-inline-start:-30px;bottom:-40px;width:140px;height:140px;border:2px dashed currentColor;border-radius:50%;opacity:.18}
@@ -168,57 +170,80 @@ const DEFAULT_RATES={ILS:1,USD:3.7,EUR:4.0,GBP:4.7,THB:0.11,JPY:0.025,CHF:4.2,CZ
 const CATS=[["food","🍽️","אוכל"],["stay","🏨","לינה"],["ride","🚕","תחבורה"],["fun","🎟️","אטרקציות"],["shop","🛍️","קניות"],["fuel","⛽","דלק"],["drink","🍻","בילוי"],["other","📦","אחר"]];
 const CAT=Object.fromEntries(CATS.map(c=>[c[0],c]));
 const LS_KEY="trip-split-v1";
+const HOME_HOST="mysplit.jacob-apps.co.il";
+const SYNC_URL=location.hostname===HOME_HOST?"/api/trips/":"https://"+HOME_HOST+"/api/trips/";
+const APP_URL=location.origin+location.pathname;
 
 let state={settings:null,expenses:[],deleted:{}};
 let tab="list";
 try{const t=localStorage.getItem(LS_KEY+":tab");if(t)tab=t}catch(e){}
 
-function loadLocal(){try{const raw=localStorage.getItem(LS_KEY);if(raw){const d=JSON.parse(raw);state.settings=d.settings||null;state.expenses=d.expenses||[];state.deleted=d.deleted||{}}}catch(e){}}
-function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}}
+let tripId=null,prefs={};
+function loadLocal(){try{const raw=localStorage.getItem(LS_KEY);if(raw){const d=JSON.parse(raw);state.settings=d.settings||null;state.expenses=d.expenses||[];state.deleted=d.deleted||{}}
+  tripId=localStorage.getItem(LS_KEY+":trip");prefs=JSON.parse(localStorage.getItem(LS_KEY+":prefs")||"{}")||{}}catch(e){}
+  if(state.settings){if(prefs.lastCurrency==null&&state.settings.lastCurrency)prefs.lastCurrency=state.settings.lastCurrency;delete state.settings.lastCurrency;delete state.settings.lastPayer}}
+function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));if(tripId)localStorage.setItem(LS_KEY+":trip",tripId);localStorage.setItem(LS_KEY+":prefs",JSON.stringify(prefs))}catch(e){}}
+function newTripId(){const a=new Uint8Array(16);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 
 /* ---- store ---- */
 const store={
-  async saveSettings(s){state.settings=s;saveLocal();render()},
-  async putExpense(e){e.updatedAt=Date.now();const i=state.expenses.findIndex(x=>x.id===e.id);if(i>=0)state.expenses[i]=e;else state.expenses.push(e);saveLocal();render()},
-  async delExpense(id){state.expenses=state.expenses.filter(x=>x.id!==id);state.deleted[id]=Date.now();saveLocal();render()}
+  async saveSettings(s){s.updatedAt=Date.now();state.settings=s;if(!tripId)tripId=newTripId();saveLocal();render();syncSoon()},
+  async putExpense(e){e.updatedAt=Date.now();const i=state.expenses.findIndex(x=>x.id===e.id);if(i>=0)state.expenses[i]=e;else state.expenses.push(e);saveLocal();render();syncSoon()},
+  async delExpense(id){state.expenses=state.expenses.filter(x=>x.id!==id);state.deleted[id]=Date.now();saveLocal();render();syncSoon()}
 };
 
-/* ---- share between phones ---- */
-const SHARE_PREFIX="חצי־חצי:";
-function b64enc(str){const bytes=new TextEncoder().encode(str);let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin)}
-function b64dec(b){const bin=atob(b);return new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0)))}
-function exportCode(){return SHARE_PREFIX+b64enc(JSON.stringify({v:1,settings:state.settings,expenses:state.expenses,deleted:state.deleted}))}
-function parseCode(text){const t=String(text||"").trim();const i=t.indexOf(SHARE_PREFIX);const raw=(i>=0?t.slice(i+SHARE_PREFIX.length):t).trim().split(/\s/)[0];
-  const d=JSON.parse(b64dec(raw));if(!d||!d.settings||!Array.isArray(d.settings.people)||!Array.isArray(d.expenses))throw new Error("bad");return d}
-function mergeIn(d){
-  if(!state.settings){const st={...d.settings};delete st.lastPayer;state.settings=st;state.expenses=d.expenses;state.deleted=d.deleted||{};saveLocal();return {added:d.expenses.length,updated:0,removed:0}}
-  const mine=state.settings.people;const map=d.settings.people.map(n=>mine.indexOf(n));
-  const missing=d.settings.people.filter((n,i)=>map[i]<0);
-  if(missing.length)throw new Error("names:"+missing.join(", "));
-  const remap=e=>({...e,paidBy:map[e.paidBy],forWhom:(e.forWhom||[]).map(i=>map[i])});
-  const del={...state.deleted};Object.entries(d.deleted||{}).forEach(([k,v])=>{if(!del[k]||del[k]<v)del[k]=v});
-  const byId=new Map(state.expenses.map(e=>[e.id,e]));let added=0,updated=0,removed=0;
-  for(const e0 of d.expenses){const e=remap(e0);const cur=byId.get(e.id);
-    if(!cur){if(!del[e.id]){byId.set(e.id,e);added++}}
-    else if((e.updatedAt||e.createdAt||0)>(cur.updatedAt||cur.createdAt||0)){byId.set(e.id,e);updated++}}
-  for(const [id,ts] of Object.entries(del)){const cur=byId.get(id);if(cur&&ts>=(cur.updatedAt||cur.createdAt||0)){byId.delete(id);removed++}}
-  state.settings.rates={...(d.settings.rates||{}),...(state.settings.rates||{})};
-  state.expenses=[...byId.values()];state.deleted=del;saveLocal();return {added,updated,removed};
+/* ---- sync with the server ---- */
+const ts=e=>Number(e?.updatedAt||e?.createdAt||0);
+function merge(a,b){
+  const deleted={...(a.deleted||{})};Object.entries(b.deleted||{}).forEach(([k,v])=>{if(!deleted[k]||deleted[k]<v)deleted[k]=v});
+  const byId=new Map();for(const e of [...(a.expenses||[]),...(b.expenses||[])]){if(!e||typeof e.id!=="string")continue;const c=byId.get(e.id);if(!c||ts(e)>ts(c))byId.set(e.id,e)}
+  for(const [id,t] of Object.entries(deleted)){const c=byId.get(id);if(c&&t>=ts(c))byId.delete(id)}
+  const sa=a.settings,sb=b.settings;const settings=!sa?sb||null:!sb?sa:(Number(sb.updatedAt||0)>Number(sa.updatedAt||0)?sb:sa);
+  return {settings,expenses:[...byId.values()],deleted};
 }
-async function shareOut(){
-  const code=exportCode();const text="הנתונים שלי מחצי־חצי ("+(state.settings?.name||"")+"). בחצי־חצי לוחצים על ⇄ שיתוף, מדביקים את כל ההודעה בתיבת הקליטה ולוחצים על קליטה ומיזוג:\n"+code;
+let syncState="idle",lastSync=0,syncing=false,again=false,syncTimer=null;
+function syncSoon(){clearTimeout(syncTimer);syncTimer=setTimeout(syncNow,400)}
+async function syncNow(){
+  if(!tripId)return;
+  if(syncing){again=true;return}
+  syncing=true;setSync("busy");
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),12000);
+    const r=await fetch(SYNC_URL+encodeURIComponent(tripId)+"/sync",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({settings:state.settings,expenses:state.expenses,deleted:state.deleted}),signal:ctrl.signal});
+    clearTimeout(to);
+    if(!r.ok)throw new Error("http "+r.status);
+    const remote=await r.json();
+    const before=JSON.stringify([state.settings,state.expenses]);
+    const m=merge(state,remote);state.settings=m.settings||state.settings;state.expenses=m.expenses;state.deleted=m.deleted;
+    saveLocal();lastSync=Date.now();setSync("ok");
+    if(location.hostname.endsWith("github.io")&&state.settings){location.replace("https://"+HOME_HOST+"/#join-"+tripId);return}
+    if(JSON.stringify([state.settings,state.expenses])!==before&&!isTyping())render();
+  }catch(e){setSync("off")}
+  finally{syncing=false;if(again){again=false;syncSoon()}}
+}
+function isTyping(){const a=document.activeElement;return a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT")&&$("#app").contains(a)}
+function setSync(st){syncState=st;const b=$("#sync-badge");if(b){b.className="sync "+(st==="ok"?"on":st==="off"?"off":"");b.textContent=syncLabel()}}
+function syncLabel(){return syncState==="ok"?"● מסונכרן":syncState==="off"?"○ בלי חיבור":syncState==="busy"?"מסנכרן…":"…"}
+function inviteLink(){return APP_URL+"#join-"+tripId}
+async function invite(){
+  const link=inviteLink();const text="הצטרף לטיול שלנו בחצי־חצי ("+(state.settings?.name||"")+"): "+link;
   if(navigator.share){try{await navigator.share({text});return}catch(e){if(e&&e.name==="AbortError")return}}
-  try{await navigator.clipboard.writeText(text);toast("הועתק. הדביקו בוואטסאפ ושלחו")}catch(e){const ta=$("#imp-text");if(ta){ta.value=text;ta.select()}toast("סמנו והעתיקו את הטקסט")}
+  try{await navigator.clipboard.writeText(link);toast("הקישור הועתק. שלחו אותו לחבר")}catch(e){const el=$("#inv-link");if(el){el.focus();el.select()}toast("סמנו והעתיקו את הקישור")}
 }
-function doImport(text){
-  const err=$("#imp-err");if(err)err.hidden=true;
-  let d;try{d=parseCode(text)}catch(e){if(err){err.textContent="לא הצלחתי לקרוא את הנתונים. הדביקו את כל ההודעה שקיבלתם.";err.hidden=false}return}
-  try{const r=mergeIn(d);render();toast(`נקלט: ${r.added} חדשות${r.updated?`, ${r.updated} עודכנו`:""}${r.removed?`, ${r.removed} נמחקו`:""}`)}
-  catch(e){if(err){err.textContent=String(e.message).startsWith("names:")?`השמות אצל החבר (${e.message.slice(6)}) לא תואמים לשמות אצלך. תקנו את השמות בהגדרות כך שיהיו זהים בשני הטלפונים.`:"הקליטה נכשלה.";err.hidden=false}}
+function checkJoin(){
+  const m=location.hash.match(/^#join-([A-Za-z0-9_-]{16,64})$/);if(!m)return;
+  const id=m[1];history.replaceState(null,"",location.pathname);
+  if(id===tripId)return;
+  const doJoin=()=>{tripId=id;state={settings:null,expenses:[],deleted:{}};saveLocal();$("#layer").innerHTML="";render();joining=true;syncNow().then(()=>{joining=false;render();if(state.settings)toast("הצטרפת לטיול ✓");else toast("לא הצלחתי להוריד את הטיול. בדקו חיבור לאינטרנט")})};
+  if(!state.settings||!state.expenses.length){doJoin();return}
+  $("#layer").innerHTML=`<div class="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="הצטרפות לטיול"><h2>להצטרף לטיול של החבר?</h2>
+    <p>בטלפון הזה כבר יש טיול ("${esc(state.settings.name)}", ${state.expenses.length} הוצאות). אם תצטרפו, הוא יוחלף בטיול המשותף.</p>
+    <button class="btn" id="j-yes">הצטרפות לטיול המשותף</button><button class="btn ghost" id="j-no">להישאר בטיול שלי</button></div></div>`;
+  $("#j-yes").onclick=doJoin;$("#j-no").onclick=()=>{$("#layer").innerHTML=""};
 }
+let joining=false;
 
-/* ---- money ---- */
 function base(){return state.settings?.base||"ILS"}
 function fmt(v,cur){cur=cur||base();const c=CURRENCIES[cur]||{s:cur};const dec=Math.abs(v)>=1000||cur==="JPY"||cur==="HUF"||cur==="VND"?0:2;
   let s=Math.abs(v).toLocaleString("he-IL",{minimumFractionDigits:Number.isInteger(Math.round(Math.abs(v)*100)/100)?0:dec,maximumFractionDigits:dec});
@@ -260,8 +285,8 @@ function render(){
   const app=$("#app");
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===tab?"page":"false"));
   const s=state.settings;
-  const head=`<header class="top"><div class="brand"><h1>חצי־חצי</h1><span class="trip">${esc(s?.name||"")}</span></div>${s?`<button class="sync" style="border:0" data-goshare>⇄ שיתוף</button>`:""}</header>`;
-  if(!s){$("#fab").hidden=true;$("#tabs").hidden=true;app.innerHTML=head+setupView();bindSetup();return}
+  const head=`<header class="top"><div class="brand"><h1>חצי־חצי</h1><span class="trip">${esc(s?.name||"")}</span></div>${s?`<button class="sync ${syncState==="ok"?"on":syncState==="off"?"off":""}" id="sync-badge" style="border:0" data-goshare>${syncLabel()}</button>`:""}</header>`;
+  if(!s){$("#fab").hidden=true;$("#tabs").hidden=true;app.innerHTML=head+(joining?`<section class="card empty"><div class="stamp">⏳</div><h2>מוריד את הטיול…</h2></section>`:setupView());if(!joining)bindSetup();return}
   $("#tabs").hidden=false;$("#fab").hidden=tab==="set";
   const c=compute();
   if(tab==="list")app.innerHTML=head+heroView(c)+listView();
@@ -336,12 +361,11 @@ function settingsView(){
     ${used.map(cur=>`<div class="rate-row"><b>${cur} ${CURRENCIES[cur]?.s||""}</b><input class="inp num" style="display:block" id="r-${cur}" inputmode="decimal" value="${s.rates?.[cur]??DEFAULT_RATES[cur]??""}" aria-label="שער ${cur}"><span class="muted small">${s.base}</span></div>`).join("")}
     <div class="row2"><select class="inp" id="r-new">${Object.keys(CURRENCIES).filter(c=>c!==s.base&&!used.includes(c)).map(c=>`<option value="${c}">${c} · ${CURRENCIES[c].n}</option>`).join("")}</select><button class="btn ghost sm" data-act="addcur" style="flex:0 0 auto">+ מטבע</button></div>
     <button class="btn" data-act="saverates">שמירת שערים</button></section>
-  <section class="card stack" id="share-sec"><h2>שיתוף עם החבר</h2>
-    <p class="hint">כל טלפון שומר את הנתונים אצלו. כדי לאחד, שלחו אחד לשני את הנתונים (למשל בוואטסאפ) והדביקו כאן. האפליקציה ממזגת: הוצאות חדשות נוספות, עריכות ומחיקות מתעדכנות, ושום דבר לא נרשם פעמיים.</p>
-    <button class="btn" data-act="shareout">שליחת הנתונים שלי</button>
-    <label class="f">קליטת נתונים מהחבר<textarea class="inp" dir="auto" id="imp-text" placeholder="הדביקו כאן את ההודעה שקיבלתם"></textarea></label>
-    <p class="err" id="imp-err" hidden></p>
-    <button class="btn ghost" data-act="import">קליטה ומיזוג</button>
+  <section class="card stack" id="share-sec"><h2>הזמנת חבר</h2>
+    <p class="hint">שלחו לחבר את הקישור. אחרי שהוא פותח אותו, כל הוצאה שאחד מכם מוסיף מופיעה אצל השני תוך כמה שניות. בלי קליטה הכל נשמר בטלפון ומסתנכרן כשחוזרת הרשת.</p>
+    <input class="inp linkbox" id="inv-link" readonly value="${esc(inviteLink())}" aria-label="קישור הזמנה">
+    <button class="btn" data-act="invite">שליחת קישור לחבר</button>
+    <p class="hint">${syncState==="ok"?"סונכרן לאחרונה "+new Date(lastSync).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):syncState==="off"?"אין כרגע חיבור לשרת. השינויים שמורים בטלפון.":""}</p>
   </section>
   <section class="card stack"><h2>איפוס</h2><p class="hint">מחיקת כל ההוצאות, למשל לפני טיול חדש. השמות והשערים נשארים.</p>
     <div id="reset-zone"><button class="btn danger" data-act="reset">מחיקת כל ההוצאות</button></div></section>`;
@@ -356,18 +380,15 @@ function setupView(){
     <label class="f">המטבע של היעד (לא חובה)<select class="inp" id="w-dest"><option value="">רק המטבע הראשי</option>${Object.keys(CURRENCIES).filter(c=>c!=="ILS").map(c=>`<option value="${c}">${CURRENCIES[c].s} ${CURRENCIES[c].n}</option>`).join("")}</select></label>
     <p class="err" id="w-err" hidden></p>
     <button class="btn" id="w-go">יוצאים לדרך</button></section>
-  <section class="card stack"><h2>החבר כבר התחיל?</h2><p class="hint">אם החבר שלח לך את הנתונים שלו מהאפליקציה, הדביקו כאן ותקבלו את אותו טיול בדיוק.</p>
-    <textarea class="inp" dir="auto" id="imp-text" placeholder="הדביקו כאן את ההודעה שקיבלתם"></textarea><p class="err" id="imp-err" hidden></p>
-    <button class="btn ghost" id="w-imp">קליטת הטיול</button></section>`;
+  <section class="card stack"><h2>החבר כבר פתח טיול?</h2><p class="hint">בקשו ממנו את קישור ההזמנה (בהגדרות, "שליחת קישור לחבר") ופתחו אותו בטלפון. הטיול המשותף ייפתח כאן.</p></section>`;
 }
 function bindSetup(){
-  $("#w-imp").onclick=()=>doImport($("#imp-text").value);
   $("#w-go").onclick=async()=>{
     const n0=$("#w-p0").value.trim()||"יעקב",n1=$("#w-p1").value.trim()||"חבר";
     if(n0===n1){const e=$("#w-err");e.textContent="צריך שני שמות שונים.";e.hidden=false;return}
     const b=$("#w-base").value,d=$("#w-dest").value;const rates={};
     if(d&&d!==b)rates[d]=+(((DEFAULT_RATES[d]||1)/(DEFAULT_RATES[b]||1)).toPrecision(4));
-    try{await store.saveSettings({name:$("#w-name").value.trim()||"הטיול שלנו",people:[n0,n1],base:b,rates,lastCurrency:d||b})}catch(e){toast("השמירה נכשלה, נסו שוב")}
+    try{await store.saveSettings({name:$("#w-name").value.trim()||"הטיול שלנו",people:[n0,n1],base:b,rates});prefs.lastCurrency=d||b;saveLocal()}catch(e){toast("השמירה נכשלה, נסו שוב")}
   };
 }
 
@@ -385,8 +406,7 @@ function bind(){
   document.querySelectorAll("[data-rmp]").forEach(b=>b.onclick=()=>{readSettingsForm();s.people.splice(+b.dataset.rmp,1);render()});
   act("saveset",async()=>{readSettingsForm();if(new Set(s.people).size!==s.people.length){toast("שני משתתפים עם אותו שם");return}await safe(store.saveSettings({...s}));toast("נשמר ✓")});
   act("addcur",()=>{const c=$("#r-new").value;if(!c)return;readRates();s.rates={...(s.rates||{}),[c]:+(((DEFAULT_RATES[c]||1)/(DEFAULT_RATES[s.base]||1)).toPrecision(4))};render()});
-  act("shareout",shareOut);
-  act("import",()=>doImport($("#imp-text").value));
+  act("invite",invite);
   document.querySelectorAll("[data-goshare]").forEach(b=>b.onclick=()=>{tab="set";render();const el=$("#share-sec");if(el)el.scrollIntoView({block:"start"})});
   act("saverates",async()=>{readRates();await safe(store.saveSettings({...s}));toast("השערים נשמרו ✓")});
   act("reset",()=>{const z=$("#reset-zone");z.innerHTML=`<div class="confirm"><span>למחוק ${state.expenses.length} רשומות? אי אפשר לבטל.</span><button class="btn danger sm" id="rs-yes">כן, למחוק</button><button class="btn ghost sm" id="rs-no">ביטול</button></div>`;
@@ -400,7 +420,7 @@ async function safe(p){try{await p}catch(e){toast("השמירה נכשלה, נס
 function openSheet(exp){
   const s=state.settings,P=s.people;
   const isNew=!exp;
-  const e=exp?{...exp}:{id:uid(),kind:"expense",amount:"",currency:s.lastCurrency||s.base,paidBy:s.lastPayer??0,forWhom:P.map((_,i)=>i),cat:"food",date:today(),desc:""};
+  const e=exp?{...exp}:{id:uid(),kind:"expense",amount:"",currency:prefs.lastCurrency||s.base,paidBy:prefs.lastPayer??0,forWhom:P.map((_,i)=>i),cat:"food",date:today(),desc:""};
   if(!e.forWhom||!e.forWhom.length)e.forWhom=P.map((_,i)=>i);
   const curs=[s.base,...Object.keys(s.rates||{}).filter(c=>c!==s.base)];if(!curs.includes(e.currency))curs.push(e.currency);
   const isT=e.kind==="transfer";
@@ -447,7 +467,7 @@ function openSheet(exp){
     if(!isT){out.desc=$("#e-desc").value.trim()}
     const btn=$("#e-save");btn.disabled=true;
     try{await store.putExpense(out);close();toast(isNew?"נוסף ✓":"נשמר ✓");
-      if(isNew&&(s.lastCurrency!==c||s.lastPayer!==e.paidBy)){s.lastCurrency=c;s.lastPayer=e.paidBy;saveLocal()}
+      if(isNew){prefs.lastCurrency=c;prefs.lastPayer=e.paidBy;saveLocal()}
     }catch(x){btn.disabled=false;err.textContent="השמירה נכשלה. נסו שוב.";err.hidden=false}
   };
   const del=$("#e-del");if(del)del.onclick=()=>{$("#del-zone").innerHTML=`<div class="confirm"><span>למחוק את הרשומה?</span><button class="btn danger sm" id="d-yes">מחיקה</button><button class="btn ghost sm" id="d-no">ביטול</button></div>`;
@@ -459,7 +479,14 @@ function openSheet(exp){
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;try{localStorage.setItem(LS_KEY+":tab",tab)}catch(e){}render();window.scrollTo(0,0)});
 $("#fab").onclick=()=>openSheet();
 loadLocal();
+if(state.settings&&!tripId){tripId=newTripId();saveLocal()}
 render();
+checkJoin();
+window.addEventListener("hashchange",checkJoin);
+syncNow();
+setInterval(()=>{if(document.visibilityState==="visible")syncNow()},15000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncNow()});
+window.addEventListener("online",syncNow);
 
 if("serviceWorker" in navigator&&location.protocol==="https:"){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
 })();
