@@ -59,7 +59,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .linkbox{direction:ltr;font-size:13px}
 
 .hero{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;inset-inline-start:-30px;bottom:-40px;width:140px;height:140px;border:2px dashed currentColor;border-radius:50%;opacity:.18}
+.hero::after{content:"";position:absolute;inset-inline-end:-38px;top:-52px;width:150px;height:150px;border-radius:50%;background:linear-gradient(90deg,rgba(255,255,255,.16) 50%,rgba(255,255,255,.07) 50%);pointer-events:none}
+.hero>*{position:relative;z-index:1}
 .hero .lbl{font-size:13px;opacity:.85;letter-spacing:.02em}
 .hero .big{font-family:var(--display);font-size:34px;font-weight:800;line-height:1.1}
 .hero .row{display:flex;gap:10px;flex-wrap:wrap}
@@ -94,7 +95,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .btn.sm{padding:8px 12px;font-size:14px}
 .btn:disabled{opacity:.5}
 
-.fab{position:fixed;z-index:6;left:max(20px,calc(env(safe-area-inset-left,0px) + 20px),calc(50% - 280px + 4px));bottom:calc(84px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:20px;border:0;background:var(--sun);color:#2a1d02;font-size:32px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.18);display:grid;place-items:center}
+.fab{transition:transform .2s ease,opacity .2s ease;position:fixed;z-index:6;left:max(20px,calc(env(safe-area-inset-left,0px) + 20px),calc(50% - 280px + 4px));bottom:calc(84px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:20px;border:0;background:var(--sun);color:#2a1d02;font-size:32px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.18);display:grid;place-items:center}
 
 nav.tabs{position:fixed;inset:auto 0 0;z-index:7;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;
   padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -131,8 +132,8 @@ label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14p
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:8px 14px;font-weight:600}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.cats button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px}
+.cats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cats button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;min-width:0;overflow-wrap:anywhere}
 .cats button .e{font-size:20px}
 .cats button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:700}
 .row2{display:flex;gap:8px;flex-wrap:wrap}
@@ -147,7 +148,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14p
 .people-edit .pe .inp{flex:1}
 .x{border:0;background:var(--soft);border-radius:10px;width:44px;font-size:18px}
 textarea.inp{min-height:110px;resize:vertical;font-size:14px}
-#share-sec{scroll-margin-top:calc(70px + env(safe-area-inset-top,0px))}
+#settle,#share-sec{scroll-margin-top:calc(70px + env(safe-area-inset-top,0px))}
 .toast{position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:calc(82px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px);background:var(--ink);color:var(--bg);padding:8px 8px 8px 14px;border-radius:12px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
 .toast span{padding-inline-start:4px}
 .toast.top{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}
@@ -179,6 +180,8 @@ div.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
 .search{padding:10px 12px}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
+.chips{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 28px);mask-image:linear-gradient(to right,transparent 0,#000 28px)}
+@media (hover:hover) and (pointer:fine){.chips{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none}.chips .sep{display:none}}
 .fchip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;white-space:nowrap}
 .fchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .chips .sep{flex:0 0 1px;background:var(--line);margin:4px 2px}
@@ -198,6 +201,12 @@ div.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
 .bars .small{color:var(--muted);min-width:70px;text-align:left}
 .person-row .bal{font-family:var(--display);font-weight:700;font-size:15px}
 .trip-row{display:flex;gap:8px;align-items:stretch}
+.fab.away{transform:translateY(140px);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.fab{transition:none}}
+.linkbtn.quiet{color:var(--muted)}
+.hero .paid-lbl{font-size:12px;opacity:.85;margin-bottom:-4px}
+.pdetail{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.trip-open .muted.small{font-weight:400}
 .trip-open{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:12px 14px}
 .trip-row.cur .trip-open{border-color:var(--accent);border-width:2px}
 .who-pick{display:flex;flex-direction:column;gap:8px}
@@ -220,8 +229,10 @@ div.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
 (function(){
 const CURRENCIES={ILS:{s:"₪",n:"שקל"},USD:{s:"$",n:"דולר"},EUR:{s:"€",n:"יורו"},GBP:{s:"£",n:"ליש״ט"},THB:{s:"฿",n:"באט"},JPY:{s:"¥",n:"ין"},CHF:{s:"CHF",n:"פרנק"},CZK:{s:"Kč",n:"קורונה צ׳כית"},HUF:{s:"Ft",n:"פורינט"},GEL:{s:"₾",n:"לארי"},TRY:{s:"₺",n:"לירה טורקית"},INR:{s:"₹",n:"רופי"},VND:{s:"₫",n:"דונג"},AED:{s:"د.إ",n:"דירהם"},PLN:{s:"zł",n:"זלוטי"},RON:{s:"lei",n:"לאו"},EGP:{s:"E£",n:"לירה מצרית"},JOD:{s:"JD",n:"דינר ירדני"},CAD:{s:"C$",n:"דולר קנדי"},AUD:{s:"A$",n:"דולר אוסטרלי"},MXN:{s:"MX$",n:"פסו מקסיקני"},PHP:{s:"₱",n:"פסו פיליפיני"},IDR:{s:"Rp",n:"רופיה"},LKR:{s:"Rs",n:"רופי סרי לנקי"},NPR:{s:"रू",n:"רופי נפאלי"}};
 const DEFAULT_RATES={ILS:1,USD:3.7,EUR:4.0,GBP:4.7,THB:0.11,JPY:0.025,CHF:4.2,CZK:0.16,HUF:0.01,GEL:1.37,TRY:0.11,INR:0.044,VND:0.00015,AED:1.0,PLN:0.93,RON:0.8,EGP:0.076,JOD:5.2,CAD:2.7,AUD:2.4,MXN:0.2,PHP:0.064,IDR:0.00023,LKR:0.012,NPR:0.027};
-const CATS=[["food","🍽️","אוכל"],["stay","🏨","לינה"],["ride","🚕","תחבורה"],["fun","🎟️","אטרקציות"],["shop","🛍️","קניות"],["fuel","⛽","דלק"],["drink","🍻","בילוי"],["other","📦","אחר"]];
+const CATS=[["food","🍽️","אוכל"],["stay","🏨","לינה"],["flight","✈️","טיסות"],["ride","🚕","תחבורה"],["fun","🎟️","אטרקציות"],["shop","🛍️","קניות"],["fuel","⛽","דלק"],["drink","🍻","בילוי"],["other","📦","אחר"]];
 const CAT=Object.fromEntries(CATS.map(c=>[c[0],c]));
+const CAT_WORDS={food:"ארוחה מסעדה קפה בוקר צהריים ערב שתייה סופר",stay:"מלון הוסטל דירה צימר לילה",flight:"טיסה טיסות מטוס שדה",ride:"מונית טוקטוק אוטובוס רכבת הסעה השכרה רכב",fun:"כרטיס כניסה סיור מוזיאון",shop:"מתנה בגדים שוק",fuel:"בנזין חניה",drink:"בר מועדון בירה",other:""};
+const DEV=(()=>{try{let d=localStorage.getItem("trip-split-v2:dev");if(!d){d=Math.random().toString(36).slice(2,10);localStorage.setItem("trip-split-v2:dev",d)}return d}catch(e){return"x"}})();
 const HOME_HOST="mysplit.jacob-apps.co.il";
 const API=location.hostname===HOME_HOST?"/api/":"https://"+HOME_HOST+"/api/";
 const APP_URL=location.origin+location.pathname;
@@ -268,7 +279,7 @@ function saveLocal(){
 /* ---------- store: every change goes through here ---------- */
 const store={
   saveSettings(s){s.updatedAt=Date.now();state.settings=s;saveLocal();render();syncSoon()},
-  putExpense(e){e.updatedAt=Date.now();const i=state.expenses.findIndex(x=>x.id===e.id);if(i>=0)state.expenses[i]=e;else state.expenses.push(e);saveLocal();render();syncSoon()},
+  putExpense(e){e.updatedAt=Date.now();if(!e.dev)e.dev=DEV;const i=state.expenses.findIndex(x=>x.id===e.id);if(i>=0)state.expenses[i]=e;else state.expenses.push(e);saveLocal();render();syncSoon()},
   delExpense(id){state.expenses=state.expenses.filter(x=>x.id!==id);state.deleted[id]=Date.now();saveLocal();render();syncSoon()}
 };
 
@@ -314,6 +325,8 @@ async function loadRates(){
 function autoRate(cur,b){b=b||base();if(cur===b)return 1;const R=rates?.rates;if(R&&R[cur]&&R[b])return R[b]/R[cur];return null}
 function rateFor(cur){const s=state.settings;if(cur===base())return 1;const m=s?.manual?.[cur];if(m>0)return m;const a=autoRate(cur);if(a)return a;return (DEFAULT_RATES[cur]||1)/(DEFAULT_RATES[base()]||1)}
 function rateSource(cur){if(cur===base())return"";if(state.settings?.manual?.[cur]>0)return"ידני";if(autoRate(cur))return"אוטומטי";return"משוער"}
+function rateUnit(r){return r>=1?1:Math.pow(10,Math.ceil(-Math.log10(r)-1e-9))}
+function rateText(cur,r){const u=rateUnit(r);return `${u.toLocaleString("he-IL")} ${CURRENCIES[cur]?.s||cur} = ${CURRENCIES[base()]?.s||base()}${niceRate(r*u)}`}
 function niceRate(r){return r>=100?r.toFixed(0):r>=1?(+r.toFixed(3)).toString():(+r.toPrecision(3)).toString()}
 
 /* ---------- receipts ---------- */
@@ -333,7 +346,7 @@ function shrinkImage(file){return new Promise((res,rej)=>{const img=new Image();
 
 /* ---------- money ---------- */
 function base(){return state.settings?.base||"ILS"}
-function fmt(v,cur){cur=cur||base();const c=CURRENCIES[cur]||{s:cur};const big=Math.abs(v)>=1000||["JPY","HUF","VND","IDR"].includes(cur);
+function fmt(v,cur,exact){cur=cur||base();const c=CURRENCIES[cur]||{s:cur};const big=(!exact&&cur===base())||Math.abs(v)>=1000||["JPY","HUF","VND","IDR"].includes(cur);if(big)v=Math.round(v);
   const r=Math.round(Math.abs(v)*100)/100;const s=r.toLocaleString("he-IL",{minimumFractionDigits:big||Number.isInteger(r)?0:2,maximumFractionDigits:big?0:2});
   return (v<0?"-":"")+c.s+s}
 function inBase(e){return (Number(e.amount)||0)*(Number(e.rate)||1)}
@@ -351,11 +364,13 @@ function compute(){
     if(e.kind!=="transfer"){total+=v;paidExp[e.paidBy]+=v;sh.forEach((x,i)=>spent[i]+=x);byCat[e.cat||"other"]=(byCat[e.cat||"other"]||0)+v}
   }
   const net=P.map((_,i)=>paid[i]-owed[i]);
-  const cr=[],dr=[];net.forEach((v,i)=>{const r=Math.round(v*100)/100;if(r>0.009)cr.push([i,r]);else if(r<-0.009)dr.push([i,-r])});
+  // whole units: nobody transfers agorot, and both sides always show the same number
+  const cr=[],dr=[];net.forEach((v,i)=>{const r=Math.round(v);if(r>0)cr.push([i,r]);else if(r<0)dr.push([i,-r])});
   cr.sort((a,b)=>b[1]-a[1]);dr.sort((a,b)=>b[1]-a[1]);
   const tr=[];let a=0,b=0;
-  while(a<dr.length&&b<cr.length){const m=Math.min(dr[a][1],cr[b][1]);tr.push({from:dr[a][0],to:cr[b][0],amt:Math.round(m*100)/100});dr[a][1]-=m;cr[b][1]-=m;if(dr[a][1]<0.01)a++;if(cr[b][1]<0.01)b++}
-  return {paid,paidExp,net,spent,total,byCat,tr};
+  while(a<dr.length&&b<cr.length){const m=Math.min(dr[a][1],cr[b][1]);if(m>0)tr.push({from:dr[a][0],to:cr[b][0],amt:m});dr[a][1]-=m;cr[b][1]-=m;if(dr[a][1]<=0)a++;if(cr[b][1]<=0)b++}
+  const give=P.map(()=>0),get=P.map(()=>0);tr.forEach(t=>{give[t.from]+=t.amt;get[t.to]+=t.amt});
+  return {paid,paidExp,net,spent,total,byCat,tr,give,get};
 }
 
 /* ---------- helpers ---------- */
@@ -383,7 +398,7 @@ function render(){
   const s=state.settings;
   const head=`<header class="top"><button class="brand" data-act="trips" aria-label="הטיולים שלי"><h1>חצי־חצי</h1><span class="trip">${esc(s?.name||"")}${trips.length?" ▾":""}</span></button>${s?`<span class="sync ${syncState==="ok"?"on":""}" id="sync-badge">${syncLabel()}</span>`:""}</header>`;
   if(!s){$("#fab").hidden=true;$("#tabs").hidden=true;app.innerHTML=head+(joining?`<section class="card empty"><div class="stamp">⏳</div><h2>מוריד את הטיול…</h2></section>`:setupView());if(!joining)bindSetup();bindCommon();return}
-  $("#tabs").hidden=false;$("#fab").hidden=tab==="set";
+  $("#tabs").hidden=false;$("#fab").hidden=tab!=="list";$("#fab").classList.remove("away");
   const c=compute();
   if(tab==="list")app.innerHTML=head+inviteCard()+(state.expenses.length?heroView(c):"")+listView();
   else if(tab==="sum")app.innerHTML=head+sumView(c);
@@ -392,8 +407,13 @@ function render(){
   if(s&&me()==null&&!$("#layer").innerHTML)askWho();
 }
 
+function needInvite(){
+  if(prefs.invited||people().length<2)return false;
+  if(state.expenses.some(e=>e.dev&&e.dev!==DEV)){prefs.invited=true;saveLocal();return false}
+  return true;
+}
 function inviteCard(){
-  if(prefs.invited||people().length<2)return"";
+  if(!needInvite())return"";
   return`<section class="card invite"><div><h2>להזמין את ${esc(people().find((_,i)=>i!==me())||"החבר")}?</h2><p class="muted small">שלחו קישור, וכל הוצאה שאחד מכם מוסיף תופיע אצל השני.</p></div>
     <div class="row2"><button class="btn" data-act="invite">שליחת קישור</button><button class="btn ghost" data-act="invited">כבר הצטרף</button></div></section>`;
 }
@@ -407,6 +427,7 @@ function heroView(c){
   const P=people();
   return`<section class="hero" aria-label="סיכום">
     <div><div class="lbl">סך ההוצאות בטיול</div><div class="big num">${fmt(c.total)}</div></div>
+    <div class="paid-lbl">כמה כל אחד שילם</div>
     <div class="row">${P.map((p,i)=>`<span class="chip">${esc(p)}: <b class="num">${fmt(c.paidExp[i])}</b></span>`).join("")}</div>
     <button class="verdict" data-goto="sum">${verdict(c)}</button>
   </section>`;
@@ -415,9 +436,12 @@ function matches(e){
   const P=people();
   if(filt.cat&&(e.kind==="transfer"?"transfer":e.cat||"other")!==filt.cat)return false;
   if(filt.who!==""&&e.paidBy!==+filt.who)return false;
-  if(filt.q){const q=filt.q.trim().toLowerCase();const txt=[e.desc,CAT[e.cat]?.[2],P[e.paidBy],String(e.amount)].join(" ").toLowerCase();if(!txt.includes(q))return false}
+  if(filt.q.trim()){const k=e.kind==="transfer"?"":e.cat||"other";const txt=norm([e.desc,CAT[k]?.[2],CAT_WORDS[k],P[e.paidBy],String(e.amount),e.kind==="transfer"?"העברה החזר":""].join(" "));
+    if(!norm(filt.q).split(" ").filter(Boolean).every(w=>new RegExp("(^|[\\s,.])[בלהומשכ]?"+stem(w).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).test(txt)))return false}
   return true;
 }
+function norm(t){return String(t||"").toLowerCase().replace(/[\u0591-\u05C7"'׳״\-]/g,"").replace(/\s+/g," ").replace(/ך/g,"כ").replace(/ם/g,"מ").replace(/ן/g,"נ").replace(/ף/g,"פ").replace(/ץ/g,"צ")}
+function stem(w){return w.length>3?w.replace(/(ים|ות|ה|ת)$/,""):w}
 function listView(){
   const P=people();
   if(!state.expenses.length)return`<section class="card empty"><div class="stamp">🧳</div><h2>הטיול מתחיל כאן</h2><p class="muted">כל הוצאה שתוסיפו תופיע כאן, עם מי שילם ובאיזה מטבע. בסוף תראו בדיוק מי מעביר למי.</p><button class="btn" data-act="add">הוספת הוצאה ראשונה</button></section>`;
@@ -439,12 +463,13 @@ function listView(){
     const title=isT?`העברה ${from(P[e.paidBy])} ${to(P[e.forWhom?.[0]])}`:e.desc||cat[2];
     out+=`<button class="exp ${isT?"transfer":""}" data-edit="${esc(e.id)}"><span class="ic" aria-hidden="true">${cat[1]}</span>
       <span class="t"><b>${esc(title)}${e.receipt?' <span class="clip" aria-label="יש קבלה">📎</span>':""}</b><span>${esc(sub)}</span></span>
-      <span class="a"><b class="num">${fmt(Number(e.amount),e.currency)}</b>${e.currency!==base()?`<span class="num">${fmt(inBase(e))}</span>`:""}</span></button>`;
+      <span class="a"><b class="num">${fmt(Number(e.amount),e.currency,true)}</b>${e.currency!==base()?`<span class="num">${fmt(inBase(e))}</span>`:""}</span></button>`;
   }
   const n=state.expenses.filter(e=>e.kind!=="transfer").length;
   const fTotal=filtered.filter(e=>e.kind!=="transfer").reduce((s,e)=>s+inBase(e),0);
+  const showF=state.expenses.length>=8||active;
   return`<div class="section-h"><h2>הוצאות</h2><span class="muted small">${count(n,"הוצאה אחת","הוצאות")}</span></div>
-  <div class="filters"><input class="inp search" id="f-q" type="search" placeholder="חיפוש: מונית, ארוחה…" value="${esc(filt.q)}" aria-label="חיפוש">
+  <div class="filters" ${showF?"":"hidden"}><input class="inp search" id="f-q" type="search" placeholder="חיפוש: מלון, ארוחה, מונית…" value="${esc(filt.q)}" aria-label="חיפוש">
     <div class="chips" role="group" aria-label="סינון">
       <button class="fchip" data-fcat="" aria-pressed="${!filt.cat}">הכל</button>
       ${usedCats.map(k=>{const c=k==="transfer"?["transfer","💸","העברות"]:CAT[k]||CAT.other;return`<button class="fchip" data-fcat="${k}" aria-pressed="${filt.cat===k}">${c[1]} ${c[2]}</button>`}).join("")}
@@ -457,7 +482,6 @@ function listView(){
 
 function sumView(c){
   const P=people();
-  const max=Math.max(1,...c.paidExp,...c.spent);
   const tr=c.tr.length?c.tr.map((t,k)=>`<div class="transfer-card">
       <div class="who">${esc(from(P[t.from]))} ${esc(to(P[t.to]))}</div>
       <b class="num amt">${fmt(t.amt)}</b>
@@ -465,17 +489,15 @@ function sumView(c){
     :`<p class="muted">${state.expenses.length?"אין חובות פתוחים. כל אחד שילם בדיוק את החלק שלו.":"ברגע שיהיו הוצאות, כאן יופיע מי מעביר למי."}</p>`;
   const cats=Object.entries(c.byCat).sort((a,b)=>b[1]-a[1]);
   const maxCat=Math.max(1,...cats.map(x=>x[1]));
-  return`<section class="card stack"><h2>סגירת חשבון</h2>${tr}</section>
-  <section class="card"><h2 style="margin-bottom:6px">כל אחד בנפרד</h2>
-    <div class="legend"><span><i class="sw paid"></i>שילם</span><span><i class="sw share"></i>החלק שלו בהוצאות</span></div>
-    ${P.map((p,i)=>{const n=Math.round(c.net[i]*100)/100;
-      const status=n<-0.009?`<span class="neg">צריך להעביר ${fmt(-n)}</span>`:n>0.009?`<span class="pos">צריך לקבל ${fmt(n)}</span>`:`<span class="muted">מאוזן ✓</span>`;
+  return`<section class="card"><h2 style="margin-bottom:6px">כל אחד בנפרד</h2>
+    ${P.map((p,i)=>{
+      const status=c.give[i]?`<span class="neg">צריך להעביר <span class="num">${fmt(c.give[i])}</span></span>`:c.get[i]?`<span class="pos">צריך לקבל <span class="num">${fmt(c.get[i])}</span></span>`:`<span class="muted">מאוזן ✓</span>`;
       return`<div class="person-row"><span class="n">${esc(p)}${i===me()?' <span class="muted small">(אני)</span>':""}</span><span class="bal">${status}</span>
-      <div class="bars"><div class="bar"><i style="width:${(c.paidExp[i]/max*100).toFixed(1)}%"></i></div><span class="num small">${fmt(c.paidExp[i])}</span>
-      <div class="bar"><i class="share" style="width:${(c.spent[i]/max*100).toFixed(1)}%"></i></div><span class="num small">${fmt(c.spent[i])}</span></div></div>`}).join("")}
+      <div class="pdetail">שולם: <span class="num">${fmt(c.paidExp[i])}</span> · החלק בהוצאות: <span class="num">${fmt(c.spent[i])}</span></div></div>`}).join("")}
   </section>
   ${cats.length?`<section class="card"><h2 style="margin-bottom:8px">לאן הלך הכסף</h2>${cats.map(([k,v])=>{const ct=CAT[k]||CAT.other;return`<div class="cat-row"><span>${ct[1]}</span><span>${ct[2]}</span><b class="num">${fmt(v)}</b><div class="bar"><i style="width:${(v/maxCat*100).toFixed(1)}%;background:var(--sun)"></i></div></div>`}).join("")}</section>`:""}
-  ${prefs.invited?"":`<button class="btn ghost" data-act="invite">הזמנת חבר לטיול</button>`}`;
+  <section class="card stack" id="settle"><h2>סגירת חשבון</h2>${tr}</section>
+`;
 }
 
 function settingsView(){
@@ -493,7 +515,7 @@ function settingsView(){
   <section class="card stack"><h2>מטבעות</h2>
     <p class="hint">הכל מחושב ב${CURRENCIES[s.base]?.n||s.base}. השערים מתעדכנים לבד מהאינטרנט${upd?` (עודכן ${upd})`:""}. אפשר לקבוע שער ידני, וכל הוצאה שומרת את השער שהיה כשנרשמה.</p>
     ${used.map(cur=>{const m=s.manual?.[cur];return`<div class="rate-row"><b>${CURRENCIES[cur]?.s||""} ${CURRENCIES[cur]?.n||cur}</b>
-      <span class="muted small">1 = ${CURRENCIES[s.base]?.s||""}${niceRate(rateFor(cur))} · ${rateSource(cur)}</span>
+      <span class="muted small"><span class="num">${rateText(cur,rateFor(cur))}</span> · ${rateSource(cur)}</span>
       ${m>0?`<button class="linkbtn" data-rauto="${cur}">חזרה לאוטומטי</button>`:`<button class="linkbtn" data-rman="${cur}">שער ידני</button>`}</div>`}).join("")}
     <div id="rate-edit"></div>
     <div class="row2"><select class="inp" id="r-new" aria-label="מטבע להוספה">${Object.keys(CURRENCIES).filter(c=>c!==s.base&&!used.includes(c)).map(c=>`<option value="${c}">${CURRENCIES[c].s} ${CURRENCIES[c].n}</option>`).join("")}</select><button class="btn ghost sm" data-act="addcur" style="flex:0 0 auto">+ מטבע</button></div></section>
@@ -536,7 +558,7 @@ function bind(){
   $$("[data-edit]").forEach(b=>b.onclick=()=>openSheet(state.expenses.find(e=>e.id===b.dataset.edit)));
   $$("[data-act=add]").forEach(b=>b.onclick=()=>openSheet());
   $$("[data-act=invite]").forEach(b=>b.onclick=invite);
-  $$("[data-goto]").forEach(b=>b.onclick=()=>setTab(b.dataset.goto));
+  $$("[data-goto]").forEach(b=>b.onclick=()=>{setTab(b.dataset.goto);const el=$("#settle");if(el)el.scrollIntoView({block:"start"})});
   const act=(n,f)=>$$(`[data-act=${n}]`).forEach(el=>el.onclick=f);
   act("invited",()=>{prefs.invited=true;saveLocal();render()});
   // filters
@@ -564,9 +586,10 @@ function bind(){
   act("addcur",()=>{const c=$("#r-new").value;if(!c)return;store.saveSettings({...s,currencies:[...new Set([...(s.currencies||[]),c])]});toast("נוסף")});
   $$("[data-rauto]").forEach(b=>b.onclick=()=>{const manual={...(s.manual||{})};delete manual[b.dataset.rauto];store.saveSettings({...s,manual})});
   $$("[data-rman]").forEach(b=>b.onclick=()=>{const cur=b.dataset.rman;const z=$("#rate-edit");
-    z.innerHTML=`<div class="confirm"><label class="f" style="flex:1">כמה ${CURRENCIES[s.base]?.n||s.base} שווה 1 ${CURRENCIES[cur]?.n||cur}?<input class="inp num" style="display:block" id="r-man" inputmode="decimal" value="${niceRate(rateFor(cur))}"></label><button class="btn sm" id="r-ok">שמירה</button></div>`;
+    const u=rateUnit(rateFor(cur));
+    z.innerHTML=`<div class="confirm"><label class="f" style="flex:1">כמה ${CURRENCIES[s.base]?.n||s.base} שווים ${u.toLocaleString("he-IL")} ${CURRENCIES[cur]?.n||cur}?<input class="inp num" style="display:block" id="r-man" inputmode="decimal" value="${niceRate(rateFor(cur)*u)}"></label><button class="btn sm" id="r-ok">שמירה</button></div>`;
     const i=$("#r-man");i.focus();i.select();
-    $("#r-ok").onclick=()=>{const v=parseFloat(i.value.replace(",","."));if(!(v>0)){toast("השער לא תקין");return}store.saveSettings({...s,manual:{...(s.manual||{}),[cur]:v}});toast("נשמר")}});
+    $("#r-ok").onclick=()=>{const v=parseFloat(i.value.replace(",","."));if(!(v>0)){toast("השער לא תקין");return}store.saveSettings({...s,manual:{...(s.manual||{}),[cur]:v/u}});toast("נשמר")}});
 }
 
 /* ---------- invite / join / who am I ---------- */
@@ -578,28 +601,37 @@ async function invite(){
   try{await navigator.clipboard.writeText(link);toast("הקישור הועתק. שלחו אותו לחבר")}catch(e){setTab("set");const el=$("#inv-link");if(el){el.focus();el.select()}toast("סמנו והעתיקו את הקישור")}
   render();
 }
-let joining=false;
+let joining=false,justJoined=false;
 function checkJoin(){
   const m=location.hash.match(/^#join-([A-Za-z0-9_-]{16,64})$/);if(!m)return;
   const id=m[1];history.replaceState(null,"",location.pathname);
   if(trips.some(t=>t.id===id)){loadTrip(id);render();syncNow();return}
   // keep the current trip in "my trips", open the shared one
-  loadTrip(id);prefs={invited:true};joining=true;render();
+  const prevId=tripId;
+  loadTrip(id);prefs={invited:true};joining=true;justJoined=true;render();
   syncNow().then(()=>{joining=false;
-    if(state.settings){saveLocal();render();toast("הצטרפת לטיול")}
-    else{trips=trips.filter(t=>t.id!==id);ls.set(K+":trips",trips);const prev=trips[trips.length-1];loadTrip(prev?prev.id:null);render();toast("לא הצלחתי להוריד את הטיול. בדקו חיבור ונסו שוב את הקישור")}
+    if(state.settings){saveLocal();render();if(me()!=null){justJoined=false;toast("הצטרפת לטיול")}}
+    else{justJoined=false;trips=trips.filter(t=>t.id!==id);ls.set(K+":trips",trips);
+      // go back to the trip that was open before, never to some other trip
+      loadTrip(prevId&&trips.some(t=>t.id===prevId)?prevId:null);render();
+      toast("אין חיבור, אז הטיול עוד לא ירד. פתחו את הקישור שוב כשתחזור הקליטה.")}
   });
 }
 function askWho(){
   const P=people();
   $("#layer").innerHTML=`<div class="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="מי את או אתה"><div class="sheet-body stack">
-    <h2>מי מחזיק את הטלפון?</h2><p class="muted">כך "מי שילם" יתחיל בך, וייקח פחות לחיצות.</p>
+    ${justJoined?`<p class="pos" style="margin:0;font-weight:700">✓ הצטרפת לטיול "${esc(state.settings?.name||"")}"</p>`:""}<h2>מי מחזיק את הטלפון?</h2><p class="muted">כך "מי שילם" יתחיל בך, וייקח פחות לחיצות.</p>
     <div class="who-pick">${P.map((p,i)=>`<button class="btn ghost" data-who="${i}">${esc(p)}</button>`).join("")}</div></div></div></div>`;
-  $$("[data-who]").forEach(b=>b.onclick=()=>{prefs.me=+b.dataset.who;saveLocal();$("#layer").innerHTML="";render()});
+  {const t=$("#toast");if(t)t.classList.add("top")}
+  $$("[data-who]").forEach(b=>b.onclick=()=>{prefs.me=+b.dataset.who;justJoined=false;saveLocal();$("#layer").innerHTML="";render()});
 }
 function openTrips(){
   const cur=tripId;
-  const list=trips.map(t=>`<div class="trip-row ${t.id===cur?"cur":""}"><button class="trip-open" data-open="${esc(t.id)}"><b>${esc(t.name||"טיול")}</b>${t.id===cur?'<span class="muted small">הטיול הפתוח</span>':""}</button>${t.id!==cur?`<button class="x" data-rmtrip="${esc(t.id)}" aria-label="הסרה מהטלפון">✕</button>`:""}</div>`).join("");
+  const info=t=>{const d=t.id===cur?state:ls.get(K+":t:"+t.id,null);if(!d)return"";const ex=(d.expenses||[]).filter(e=>e.kind!=="transfer");if(!ex.length)return"עוד אין הוצאות";
+    const ds=ex.map(e=>e.date).filter(Boolean).sort();const dd=x=>new Date(x+"T12:00:00").toLocaleDateString("he-IL",{day:"numeric",month:"numeric"});
+    const tot=ex.reduce((a,e)=>a+inBase(e),0);const b=d.settings?.base||"ILS";const sym=CURRENCIES[b]?.s||b;
+    return`${ds.length?dd(ds[0])+(ds[0]!==ds[ds.length-1]?"–"+dd(ds[ds.length-1]):"")+" · ":""}${sym}${Math.round(tot).toLocaleString("he-IL")} · ${count(ex.length,"הוצאה אחת","הוצאות")}`};
+  const list=trips.map(t=>`<div class="trip-row ${t.id===cur?"cur":""}"><button class="trip-open" data-open="${esc(t.id)}"><b>${esc(t.name||"טיול")}</b><span class="muted small">${t.id===cur?"הטיול הפתוח · ":""}${esc(info(t))}</span></button>${t.id!==cur?`<button class="x" data-rmtrip="${esc(t.id)}" aria-label="הסרה מהטלפון">✕</button>`:""}</div>`).join("");
   $("#layer").innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="הטיולים שלי">
     <div class="sheet-head"><h2>הטיולים שלי</h2><button class="x" id="sh-x" aria-label="סגירה">✕</button></div>
     <div class="sheet-body stack">${list||'<p class="muted">עוד אין טיולים.</p>'}<div id="trip-confirm"></div>
@@ -607,9 +639,10 @@ function openTrips(){
   const close=()=>{$("#layer").innerHTML=""};$("#sh-x").onclick=close;$("#scrim").onclick=ev=>{if(ev.target.id==="scrim")close()};
   $$("[data-open]").forEach(b=>b.onclick=()=>{close();if(b.dataset.open!==tripId){loadTrip(b.dataset.open);setTab("list");syncNow()}});
   $("#t-new").onclick=()=>{close();loadTrip(null);render()};
-  $$("[data-rmtrip]").forEach(b=>b.onclick=()=>{const id=b.dataset.rmtrip;const t=trips.find(x=>x.id===id);
-    $("#trip-confirm").innerHTML=`<div class="confirm"><span>להסיר את "${esc(t.name)}" מהטלפון? הוא יישאר אצל החבר ובשרת, ואפשר לחזור אליו דרך קישור ההזמנה.</span><button class="btn danger sm" id="tr-yes">הסרה</button><button class="btn ghost sm" id="tr-no">ביטול</button></div>`;
-    $("#tr-no").onclick=openTrips;$("#tr-yes").onclick=()=>{trips=trips.filter(x=>x.id!==id);ls.set(K+":trips",trips);ls.del(K+":t:"+id);ls.del(K+":p:"+id);openTrips()}});
+  $$("[data-rmtrip]").forEach(b=>b.onclick=()=>{const id=b.dataset.rmtrip;const pos=trips.findIndex(x=>x.id===id);const t=trips[pos];
+    const data=ls.get(K+":t:"+id,null),pr=ls.get(K+":p:"+id,null);
+    trips=trips.filter(x=>x.id!==id);ls.set(K+":trips",trips);ls.del(K+":t:"+id);ls.del(K+":p:"+id);openTrips();
+    toast(`"${t.name||"הטיול"}" הוסר מהטלפון`,()=>{trips.splice(pos,0,t);ls.set(K+":trips",trips);if(data)ls.set(K+":t:"+id,data);if(pr)ls.set(K+":p:"+id,pr);if($("#layer").innerHTML)openTrips()})});
 }
 async function payWithBit(t){
   if(!t)return;const P=people();
@@ -640,7 +673,7 @@ function openSheet(exp){
     <div class="amount-row"><input class="inp amt" id="e-amt" inputmode="decimal" enterkeyhint="done" placeholder="0" value="${esc(e.amount)}" aria-label="סכום" autocomplete="off">
       <select class="inp" id="e-cur" aria-label="מטבע">${curs.map(c=>`<option value="${c}" ${c===e.currency?"selected":""}>${CURRENCIES[c]?.s||""} ${c}</option>`).join("")}</select></div>
     <div class="conv"><span id="e-conv"></span><button type="button" class="linkbtn" id="e-rate-link">שינוי שער</button></div>
-    <div id="e-rate-box" hidden><label class="f">כמה ${CURRENCIES[s.base]?.n||s.base} שווה 1 <span id="e-rate-cur"></span>?<input class="inp num" style="display:block" id="e-rate" inputmode="decimal"></label></div>
+    <div id="e-rate-box" hidden><label class="f"><span>כמה ${CURRENCIES[s.base]?.n||s.base} שווים <span id="e-rate-cur"></span>?</span><input class="inp num" style="display:block" id="e-rate" inputmode="decimal"></label></div>
     <div class="f">${isT?"מי העביר":"מי שילם"}<div class="seg" id="e-payer">${P.map((p,i)=>`<button type="button" data-p="${i}" aria-pressed="${e.paidBy===i}">${meName(i)}</button>`).join("")}</div></div>
     ${isT?"":`<label class="f">על מה?<input class="inp" id="e-desc" enterkeyhint="done" placeholder="ארוחת ערב, מונית לשדה…" value="${esc(e.desc)}" maxlength="60"></label>
     <div class="cats" role="group" aria-label="קטגוריה">${CATS.map(c=>`<button type="button" data-cat="${c[0]}" aria-pressed="${e.cat===c[0]}"><span class="e">${c[1]}</span>${c[2]}</button>`).join("")}</div>`}
@@ -661,18 +694,19 @@ function openSheet(exp){
   function upd(){
     const c=cur.value;if(!rateTouched)rate=rateFor(c);
     const a=num(amt.value);const foreign=c!==s.base;
-    $("#e-rate-cur").textContent=CURRENCIES[c]?.n||c;
+    $("#e-rate-cur").textContent=rUnit.toLocaleString("he-IL")+" "+(CURRENCIES[c]?.n||c);
+    const src=rateTouched?(isNew?"לפי השער שהזנת":"לפי השער ששמור בהוצאה"):({"ידני":"לפי השער הידני","אוטומטי":"לפי שער היום","משוער":"לפי שער משוער"}[rateSource(c)]||"");
     let t="";
-    if(foreign)t=(a>0?`≈ ${fmt(a*rate)} · `:"")+`1 ${CURRENCIES[c]?.s||c} = ${CURRENCIES[s.base]?.s||""}${niceRate(rate)}${rateTouched&&!isNew?"":" ("+rateSource(c)+")"}`;
+    if(foreign)t=a>0?`≈ ${fmt(a*rate)} ${src}`:rateText(c,rate);
     else if(a>0&&!isT&&!uneven&&e.forWhom.length>1)t=`${fmt(a/e.forWhom.length)} לכל אחד`;
     $("#e-conv").textContent=t;$("#e-rate-link").hidden=!foreign;$("#e-rate-box").hidden=!(foreign&&rateOpen);
     if(uneven){const sum=[...$$("[data-sh]")].reduce((x,el)=>x+(num(el.value)||0),0);const left=Math.round(((a||0)-sum)*100)/100;
-      $("#e-sh-left").textContent=!(a>0)?"קודם מזינים את הסכום הכולל.":left===0?"✓ החלוקה מסתדרת":left>0?`נשארו ${fmt(left,c)} לחלק`:`חרגתם ב־${fmt(-left,c)}`;
+      $("#e-sh-left").textContent=!(a>0)?"קודם מזינים את הסכום הכולל.":left===0?"✓ החלוקה מסתדרת":left>0?`נשארו ${fmt(left,c,true)} לחלק`:`חרגתם ב־${fmt(-left,c,true)}`;
       $("#e-sh-left").className="hint "+(left===0&&a>0?"pos":"")}
   }
-  rateIn.value=niceRate(rate);
-  amt.oninput=upd;cur.onchange=()=>{rateTouched=false;rateIn.value=niceRate(rateFor(cur.value));upd()};
-  rateIn.oninput=()=>{const v=num(rateIn.value);if(v>0){rate=v;rateTouched=true;upd()}};
+  let rUnit=rateUnit(rate);rateIn.value=niceRate(rate*rUnit);
+  amt.oninput=()=>{autoShare();upd()};cur.onchange=()=>{rateTouched=false;rate=rateFor(cur.value);rUnit=rateUnit(rate);rateIn.value=niceRate(rate*rUnit);upd()};
+  rateIn.oninput=()=>{const v=num(rateIn.value);if(v>0){rate=v/rUnit;rateTouched=true;upd()}};
   $("#e-rate-link").onclick=()=>{rateOpen=!rateOpen;upd();if(rateOpen){rateIn.focus();rateIn.select()}};
   $$("[data-cat]").forEach(b=>b.onclick=()=>{e.cat=b.dataset.cat;$$("[data-cat]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
   $$("[data-p]").forEach(b=>b.onclick=()=>{e.paidBy=+b.dataset.p;$$("[data-p]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
@@ -681,14 +715,18 @@ function openSheet(exp){
     $$("[data-f]").forEach(x=>x.setAttribute("aria-pressed",e.forWhom.includes(+x.dataset.f)));upd()});
   const un=$("#e-uneven");if(un)un.onclick=()=>{uneven=!uneven;un.textContent=uneven?"חלוקה שווה":"חלוקה לא שווה";$("#e-for").hidden=uneven;$("#e-shares").hidden=!uneven;
     if(uneven){const a=num(amt.value);if(a>0&&![...$$("[data-sh]")].some(el=>el.value)){const each=Math.floor(a/P.length*100)/100;$$("[data-sh]").forEach((el,k)=>el.value=k===P.length-1?Math.round((a-each*(P.length-1))*100)/100:each)}}upd()};
-  $$("[data-sh]").forEach(el=>el.oninput=upd);
+  // two people: type one part, the other fills itself with what is left
+  const shTouched=new Set();
+  function autoShare(){if(!uneven)return;const els=[...$$("[data-sh]")];const free=els.filter(el=>!shTouched.has(el.dataset.sh));if(free.length!==1)return;
+    const a=num(amt.value);if(!(a>0))return;const rest=els.filter(el=>el!==free[0]).reduce((x,el)=>x+(num(el.value)||0),0);const left=Math.round((a-rest)*100)/100;free[0].value=left>0?left:""}
+  $$("[data-sh]").forEach(el=>el.oninput=()=>{shTouched.add(el.dataset.sh);autoShare();upd()});
   $$("[data-day]").forEach(b=>b.onclick=()=>{const m=b.dataset.day;$$("[data-day]").forEach(x=>x.setAttribute("aria-pressed",x===b));const d=$("#e-date");
     if(m==="today")d.value=today();else if(m==="yesterday")d.value=yesterday();d.hidden=m!=="other";if(m==="other")d.focus()});
   // receipt
   let receipt=e.receipt||null,newReceipt=null;
   function drawReceipt(){const z=$("#e-receipt");if(!z)return;
     const src=newReceipt||(receipt?receiptUrl(receipt):null);
-    z.innerHTML=src?`<a href="${esc(src)}" target="_blank" rel="noopener" class="thumb"><img src="${esc(src)}" alt="קבלה"></a><div class="r-acts"><button type="button" class="linkbtn" id="r-change">החלפה</button><button type="button" class="linkbtn danger-link" id="r-del">הסרה</button></div>`
+    z.innerHTML=src?`<a href="${esc(src)}" target="_blank" rel="noopener" class="thumb"><img src="${esc(src)}" alt="קבלה"></a><div class="r-acts"><button type="button" class="linkbtn" id="r-change">החלפה</button><button type="button" class="linkbtn quiet" id="r-del">הסרת הקבלה</button></div>`
       :`<button type="button" class="btn ghost sm" id="r-add">📷 צירוף צילום קבלה</button>`;
     const pick=()=>$("#e-file").click();const a=$("#r-add");if(a)a.onclick=pick;const ch=$("#r-change");if(ch)ch.onclick=pick;
     const d=$("#r-del");if(d)d.onclick=()=>{receipt=null;newReceipt=null;drawReceipt()}}
@@ -706,7 +744,7 @@ function openSheet(exp){
     if(!(r>0))return showErr("שער המטבע לא תקין.");
     let shares=null;
     if(uneven){shares={};let sum=0;$$("[data-sh]").forEach(el=>{const v=num(el.value)||0;if(v>0){shares[el.dataset.sh]=Math.round(v*100)/100;sum+=v}});
-      if(Math.abs(sum-a)>0.009)return showErr(`סכום החלקים (${fmt(sum,c)}) צריך להיות שווה לסכום ההוצאה (${fmt(a,c)}).`)}
+      if(Math.abs(sum-a)>0.009)return showErr(`סכום החלקים (${fmt(sum,c,true)}) צריך להיות שווה לסכום ההוצאה (${fmt(a,c,true)}).`)}
     else if(!e.forWhom.length)return showErr("צריך לבחור לפחות אדם אחד שההוצאה עבורו.");
     if(isT&&e.forWhom[0]===e.paidBy)return showErr("אי אפשר להעביר כסף לעצמך.");
     const out={...e,amount:Math.round(a*100)/100,currency:c,rate:r,date:$("#e-date").value||today(),createdAt:e.createdAt||Date.now()};
@@ -730,6 +768,8 @@ if(window.visualViewport){visualViewport.addEventListener("resize",fitSheet);vis
 function setTab(t){tab=t;ls.set(K+":tab",t);render();window.scrollTo(0,0)}
 $$("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 $("#fab").onclick=()=>openSheet();
+{let lastY=window.scrollY;window.addEventListener("scroll",()=>{const y=window.scrollY,f=$("#fab");if(Math.abs(y-lastY)<8)return;
+  f.classList.toggle("away",y>lastY&&y>80&&y+innerHeight<document.documentElement.scrollHeight-40);lastY=y},{passive:true})}
 migrateV1();
 loadTrip(tripId&&trips.some(t=>t.id===tripId)?tripId:(trips[trips.length-1]?.id||null));
 render();

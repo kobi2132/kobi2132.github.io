@@ -1,5 +1,5 @@
 // חצי־חצי: offline support. Bump VERSION when files change.
-const VERSION = "v4";
+const VERSION = "v5";
 const CACHE = "trip-split-" + VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./apple-touch-icon.png"];
 
