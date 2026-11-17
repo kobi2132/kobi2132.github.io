@@ -1,0 +1,33 @@
+# Lives on the server at /srv/apps/trip-split/compose.yaml (next to server.mjs).
+# A tiny sync server for חצי־חצי. Small limits so it never competes with tarpi.
+name: trip-split
+
+services:
+  app:
+    image: node:22-alpine
+    container_name: trip-split-app
+    restart: unless-stopped
+    user: "1000:1000"
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    environment:
+      DATA_DIR: /data
+      ALLOWED_ORIGINS: https://kobi2132.github.io
+    volumes:
+      - ./server.mjs:/app/server.mjs:ro
+      - ./data:/data
+    read_only: true
+    mem_limit: 96m
+    cpus: 0.25
+    cpu_shares: 256
+    pids_limit: 50
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [web]
+
+networks:
+  web:
+    external: true
